@@ -72,8 +72,25 @@ const walls = [];
 const bricks = [];
 
 
+let playerDirRight = false;
+let playerDirLeft = false;
+document.addEventListener('keydown', function(event) {
+    if (event.code === 'KeyA') playerDirLeft = true;
+    else if (event.code === 'KeyD') playerDirRight = true;
+})
+document.addEventListener('keyup', function(event) {
+    if (event.code === 'KeyA') playerDirLeft = false;
+    else if (event.code === 'KeyD') playerDirRight = false;
+})
+
+
 function oneFrameGameCycle() {
     // ОбРАБОТКА ИГРОВЫХ СОБЫТИЙ
+    if (playerDirLeft) {
+        player.setX = player.getX - 10;
+    } else if (playerDirRight) {
+        player.setX = player.getX + 10;
+    }
 
     // ОТРИСОВКА КАДРА
     ctx.fillStyle = 'white';
