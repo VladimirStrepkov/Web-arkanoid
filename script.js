@@ -13,7 +13,8 @@ class gameObject {
         this.#y = y;
         this.#width = width;
         this.#height = height;
-        this.#image = image;
+        this.#image = new Image();
+        this.#image.src = image;
     }
 
     get getX() {
@@ -61,6 +62,33 @@ class gameObject {
     }
 }
 
+const player = new gameObject(565, 640, 100, 30, 'images/playerSprite.png');
+
+const ball = new gameObject(400, 400, 15, 15, 'images/ballSprite.png');
+let ballSpeed = 5;
+let ballDirectionVector = [0, 0];
+
+const walls = [];
+const bricks = [];
+
+
+function oneFrameGameCycle() {
+    // ОбРАБОТКА ИГРОВЫХ СОБЫТИЙ
+
+    // ОТРИСОВКА КАДРА
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 1280, 720);
+
+    ctx.drawImage(player.getImage, player.getX, player.getY);
+    ctx.drawImage(ball.getImage, ball.getX, ball.getY);
+    for (let i = 0; i < walls.length; i++) {
+        ctx.drawImage(walls[i].getImage, walls[i].getX, walls[i].getY);
+    }
+    for (let i = 0; i < bricks.length; i++) {
+        ctx.drawImage(bricks[i].getImage, bricks[i].getX, bricks[i].getY);
+    }
+}
+setInterval(oneFrameGameCycle, 25)
 
 
 // player = new gameObject(1, 2, 10, 10, 'sdfsf');
