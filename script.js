@@ -63,38 +63,65 @@ class gameObject {
 }
 
 const player = new gameObject(565, 640, 100, 30, 'images/playerSprite.png');
-playerSpeed = 15;
+playerSpeed = 5;
 
-const ball = new gameObject(100, 100, 15, 15, 'images/ballSprite.png');
-let ballSpeed = 8;
-let ballDirectionVector = [1, 1];
+const ball = new gameObject(1000, 100, 15, 15, 'images/ballSprite.png');
+let ballSpeed = 4;
+let ballDirectionVector = [-1, 1];
 
 const walls = [];
 const bricks = [];
+
+let scores = 0;
 
 const levels = [];
 levels.push(
     [
      '################################',
-     '#     * * * * * * * * * *      #',
-     '#     * * * * * * * * * *      #',
+     '#                              #',
+     '#                              #',
+     '#                              #',
+     '#      *                *      #',
      '#                              #',
      '#                              #',
      '#                              #',
      '#                              #',
-     '#     #  #   #    #   #   #    #',
+     '#               0              #',
      '#                              #',
      '#                              #',
      '#                              #',
      '#                              #',
      '#                              #',
      '#                              #',
-     '#                              #',
-     '#                              #',
-     '#                              #',
+     '#             p                #',
      '#                              #',
     ]
 )
+levels.push(
+    [
+     '################################',
+     '#     * * * * * * * * * *      #',
+     '#                              #',
+     '#                              #',
+     '#               0              #',
+     '#                              #',
+     '#                              #',
+     '#                              #',
+     '#                              #',
+     '#       #######                #',
+     '#                              #',
+     '#                              #',
+     '#             p                #',
+     '#                              #',
+     '#                              #',
+     '#                              #',
+     '#     ###      ######          #',
+     '#                              #',
+    ]
+)
+let numLevel = 0;
+
+ctx.font = "48px serif";
 
 
 let playerDirRight = false;
@@ -114,13 +141,11 @@ let ballRightCollision = false;
 let ballTopCollision = false;
 let ballBottomCollision = false;
 function ballCollision(obj) {
-    if (gameObject.rectIntersection(ball, obj)) {
-        if (ball.getX <= obj.getX) ballRightCollision = true;
-        if (ball.getX + ball.getWidth >= obj.getX + obj.getWidth) ballLeftCollision = true;
+    if (ball.getX <= obj.getX) ballRightCollision = true;
+    if (ball.getX + ball.getWidth >= obj.getX + obj.getWidth) ballLeftCollision = true;
 
-        if (ball.getY <= obj.getY) ballBottomCollision = true;
-        if (ball.getY + ball.getHeight >= obj.getY + obj.getHeight) ballTopCollision = true;
-    }
+    if (ball.getY <= obj.getY) ballBottomCollision = true;
+    if (ball.getY + ball.getHeight >= obj.getY + obj.getHeight) ballTopCollision = true;
 }
 
 function gameObjectPlacement(level) {
@@ -131,13 +156,21 @@ function gameObjectPlacement(level) {
             if (level[i][j] === '#') {
                 walls.push(new gameObject(40 * j, 40 * i, 40, 40, 'images/wallSprite.png'));
             }
-            if (level[i][j] === '*') {
+            else if (level[i][j] === '*') {
                 if (numberColorBricks == 0) imageBrick = 'images/blueBrickSprite.png';
                 else if (numberColorBricks == 1) imageBrick = 'images/pinkBrickSprite.png';
                 else if (numberColorBricks == 2) imageBrick = 'images/yellowBrickSprite.png';
                 numberColorBricks++;
                 numberColorBricks %= 3;
                 bricks.push(new gameObject(40 * j, 40 * i, 80, 40, imageBrick))
+            }
+            else if (level[i][j] === 'p') {
+                player.setX = 40 * j;
+                player.setY = 40 * i;
+            }
+            else if (level[i][j] == '0') {
+                ball.setX = 40 * j;
+                ball.setY = 40 * i;
             }
         }
     }
@@ -153,14 +186,19 @@ function oneFrameGameCycle() {
 
     } else if (playerDirRight) {
         player.setX = player.getX + playerSpeed;
-        if (gameObject.rectIntersection(player, ball) && ball.getX + ball.getWidth + playerSpeed > player.getX + player.getWidth) ball.setX = player.getX + player.getWidth;
+        if (gameObject.rectIntersection(player, ball) 
+        && ball.getX + ball.getWidth + playerSpeed > player.getX + player.getWidth) ball.setX = player.getX + player.getWidth;
     }
     if (player.getX < 40) player.setX = 40;
     if (player.getX + player.getWidth + 40 > 1280) player.setX = 1280 - 40 - player.getWidth;
 
-    ballCollision(player);
-    for (let i = 0; i < walls.length; i++) ballCollision(walls[i]);
-    for (let i = 0; i < bricks.length; i++) ballCollision(bricks[i]);
+    if (gameObject.rectIntersection(player, ball)) ballCollision(player);
+    for (let i = 0; i < walls.length; i++) if (gameObject.rectIntersection(walls[i], ball)) ballCollision(walls[i]);
+    for (let i = 0; i < bricks.length; i++) if (gameObject.rectIntersection(bricks[i], ball)) {
+        ballCollision(bricks[i]);
+        scores++;
+        bricks.splice(i, 1);
+    }
     
     if (ballBottomCollision && ballTopCollision && ballRightCollision && ballLeftCollision) {
         ballDirectionVector[0] = -ballDirectionVector[0];
@@ -178,6 +216,7 @@ function oneFrameGameCycle() {
     else if (ballTopCollision) ballDirectionVector[1] = 1;
     else if (ballLeftCollision) ballDirectionVector[0] = 1;
     else if (ballRightCollision) ballDirectionVector[0] = -1;
+
     if (ballBottomCollision || ballTopCollision || ballRightCollision || ballLeftCollision) {
         if (Math.abs(ballDirectionVector[0] > 0.2)) ballDirectionVector[0] *= Math.random() * (1 - 0.9) + 0.9;
         if (Math.abs(ballDirectionVector[1] > 0.2)) ballDirectionVector[1] *= Math.random() * (1 - 0.9) + 0.9;
@@ -191,12 +230,9 @@ function oneFrameGameCycle() {
     ball.setX = ball.getX + ballSpeed * ballDirectionVector[0] / hypotenuse;
     ball.setY = ball.getY + ballSpeed * ballDirectionVector[1] / hypotenuse;
 
-    
-
-
 
     // ОТРИСОВКА КАДРА
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#ACB78E';
     ctx.fillRect(0, 0, 1280, 720);
 
     ctx.drawImage(player.getImage, player.getX, player.getY);
@@ -207,14 +243,24 @@ function oneFrameGameCycle() {
     for (let i = 0; i < bricks.length; i++) {
         ctx.drawImage(bricks[i].getImage, bricks[i].getX, bricks[i].getY);
     }
+
+    ctx.fillStyle = 'red';
+    ctx.fillText(`Очки: ${scores}`, 50, 100);
+
+    // Смена уровня
+    if (bricks.length == 0 && numLevel < levels.length - 1) {
+        numLevel++;
+        walls.splice(0, walls.length)
+        gameObjectPlacement(levels[numLevel]);
+    }
+    // Перезапуск уровня
+    if (ball.getX > 1380 || ball.getX < -100 || ball.getY > 820 || ball.getY < -100) {
+        scores = 0;
+        walls.splice(0, walls.length)
+        bricks.splice(0, bricks.length)
+        gameObjectPlacement(levels[numLevel]);
+    }
 }
-setInterval(oneFrameGameCycle, 25)
+setInterval(oneFrameGameCycle, 10)
 
-
-// player = new gameObject(1, 2, 10, 10, 'sdfsf');
-// player.setX = 4;
-// console.log(player.getImage);
-
-// ctx.strokeStyle = 'red';
-// ctx.strokeRect(100, 100, 50, 50);
 gameObjectPlacement(levels[0])
