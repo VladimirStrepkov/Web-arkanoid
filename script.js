@@ -63,14 +63,17 @@ class gameObject {
 }
 
 const player = new gameObject(565, 640, 100, 30, 'images/playerSprite.png');
-playerSpeed = 5;
+playerSpeed = 8;
 
 const ball = new gameObject(1000, 100, 15, 15, 'images/ballSprite.png');
-let ballSpeed = 4;
-let ballDirectionVector = [-1, 1];
+let ballSpeed = 0;
+let ballDirectionVector = [1, -1];
 
 const walls = [];
 const bricks = [];
+
+const knock = new Audio('sounds/knock.mp3');
+const knock2 = new Audio('sounds/knock2.mp3')
 
 let scores = 0;
 
@@ -80,19 +83,19 @@ levels.push(
      '################################',
      '#                              #',
      '#                              #',
+     '#       ####       ####        #',
      '#                              #',
-     '#      *                *      #',
+     '#           * * *              #',
+     '#           * * *              #',
      '#                              #',
-     '#                              #',
-     '#                              #',
-     '#                              #',
-     '#               0              #',
-     '#                              #',
+     '#         #########            #',
      '#                              #',
      '#                              #',
      '#                              #',
      '#                              #',
      '#                              #',
+     '#                              #',
+     '#             0                #',
      '#             p                #',
      '#                              #',
     ]
@@ -100,26 +103,136 @@ levels.push(
 levels.push(
     [
      '################################',
-     '#     * * * * * * * * * *      #',
-     '#                              #',
-     '#                              #',
-     '#               0              #',
      '#                              #',
      '#                              #',
      '#                              #',
+     '#                 *            #',
+     '#              #####           #',
      '#                              #',
-     '#       #######                #',
      '#                              #',
+     '#           * *                #',
+     '#       #######           *    #',
      '#                              #',
+     '#             0                #',
      '#             p                #',
      '#                              #',
      '#                              #',
      '#                              #',
-     '#     ###      ######          #',
+     '#     ####     ######     ######',
      '#                              #',
     ]
 )
-let numLevel = 0;
+levels.push(
+    [
+     '################################',
+     '#                              #',
+     '#                              #',
+     '#        * * * * * * *         #',
+     '#                              #',
+     '#          #        #          #',
+     '#                    #         #',
+     '#                              #',
+     '#       #                      #',
+     '#      #                #      #',
+     '#                              #',
+     '#                              #',
+     '#        #####                 #',
+     '#                              #',
+     '#                              #',
+     '#               0              #',
+     '#               p              #',
+     '####                        ####',
+    ]
+)
+levels.push(
+    [
+     '################################',
+     '#                              #',
+     '#       * * *                  #',
+     '#                              #',
+     '#                              #',
+     '#         * * *      ##        #',
+     '#                    #         #',
+     '#                    #         #',
+     '#         #     ######         #',
+     '#         #                    #',
+     '#    ###                       #',
+     '#                              #',
+     '#                              #',
+     '#                              #',
+     '#             0                #',
+     '#             p                #',
+     '#                              #',
+     '#                      #########',
+    ]
+)
+levels.push(
+    [
+     '################################',
+     '#                              #',
+     '#    ##         ##             #',
+     '#                              #',
+     '#    ##     *    ##    *  *    #',
+     '#                              #',
+     '#    ##     *     ##           #',
+     '#                              #',
+     '#    ##     *      ##          #',
+     '#                              #',
+     '#    ##     *        ##        #',
+     '#                              #',
+     '#                              #',
+     '#              0               #',
+     '#              p               #',
+     '#                              #',
+     '#                              #',
+     '#                              #',
+    ]
+)
+levels.push(
+    [
+     '################################',
+     '#       #                #     #',
+     '#                              #',
+     '#                              #',
+     '#     ######      ########     #',
+     '#       #* * * *  #            #',
+     '#       #* * * *               #',
+     '#       #* * * *  #            #',
+     '#                 #            #',
+     '#       #         #            #',
+     '#                 #            #',
+     '#                              #',
+     '#                              #',
+     '#              0               #',
+     '#              p               #',
+     '#                              #',
+     '#       ####################   #',
+     '#                              #',
+    ]
+)
+levels.push(
+    [
+     '################################',
+     '#      *                       #',
+     '#             *           *    #',
+     '#   #      *      #    #       #',
+     '#                         *    #',
+     '#        #       *             #',
+     '#                      #       #',
+     '#   #                          #',
+     '#        *                     #',
+     '#                              #',
+     '#        *                     #',
+     '#   #                          #',
+     '#                              #',
+     '#              0               #',
+     '#              p               #',
+     '#                              #',
+     '#   #   ########       #####   #',
+     '#                              #',
+    ]
+)
+let numLevel = Math.floor(Math.random() * (levels.length));
 
 ctx.font = "48px serif";
 
@@ -192,9 +305,19 @@ function oneFrameGameCycle() {
     if (player.getX < 40) player.setX = 40;
     if (player.getX + player.getWidth + 40 > 1280) player.setX = 1280 - 40 - player.getWidth;
 
-    if (gameObject.rectIntersection(player, ball)) ballCollision(player);
-    for (let i = 0; i < walls.length; i++) if (gameObject.rectIntersection(walls[i], ball)) ballCollision(walls[i]);
+    if (gameObject.rectIntersection(player, ball)) {
+        if (knock.currentTime > 0.02) knock.currentTime = 0.0;
+        knock.play();
+        ballCollision(player);
+    }
+    for (let i = 0; i < walls.length; i++) if (gameObject.rectIntersection(walls[i], ball)) {
+        if (knock.currentTime > 0.02) knock.currentTime = 0.0;
+        knock.play();
+        ballCollision(walls[i]);
+    }
     for (let i = 0; i < bricks.length; i++) if (gameObject.rectIntersection(bricks[i], ball)) {
+        if (knock2.currentTime > 0.02) knock2.currentTime = 0.0;
+        knock2.play();
         ballCollision(bricks[i]);
         scores++;
         bricks.splice(i, 1);
@@ -246,21 +369,32 @@ function oneFrameGameCycle() {
 
     ctx.fillStyle = 'red';
     ctx.fillText(`Очки: ${scores}`, 50, 100);
+}
+setInterval(oneFrameGameCycle, 10)
 
+function oneSecondGameCycle() {
+    ballSpeed = (Math.floor(scores / 3) + 3);
+    if (ballSpeed > 12) ballSpeed = 12;
+    
     // Смена уровня
-    if (bricks.length == 0 && numLevel < levels.length - 1) {
-        numLevel++;
+    if (bricks.length == 0) {
+        ballSpeed = 0;
+        ballDirectionVector = [1, -1];
+        numLevel = Math.floor(Math.random() * (levels.length));
         walls.splice(0, walls.length)
         gameObjectPlacement(levels[numLevel]);
     }
     // Перезапуск уровня
     if (ball.getX > 1380 || ball.getX < -100 || ball.getY > 820 || ball.getY < -100) {
+        ballSpeed = 0;
+        ballDirectionVector = [1, -1];
+        numLevel = Math.floor(Math.random() * (levels.length));
         scores = 0;
         walls.splice(0, walls.length)
         bricks.splice(0, bricks.length)
         gameObjectPlacement(levels[numLevel]);
     }
 }
-setInterval(oneFrameGameCycle, 10)
+setInterval(oneSecondGameCycle, 1000)
 
-gameObjectPlacement(levels[0])
+gameObjectPlacement(levels[numLevel])
